@@ -40,7 +40,7 @@ export default function PreviewPage() {
             Add some questions first to see the preview.
           </div>
         ) : (
-          <div className="min-h-[70vh] flex-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+          <div className="h-[calc(100vh-220px)] min-h-[480px] overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
             <QuizPreview quiz={quiz} />
           </div>
         )}
