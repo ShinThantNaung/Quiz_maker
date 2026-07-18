@@ -7,7 +7,7 @@ interface Props {
   link: PublishedLink;
   /** Absolute origin (e.g. "https://host"); links resolve to origin + path. */
   origin: string;
-  onDelete: (path: string) => void;
+  onDelete: (id: string) => void;
   /** When provided, an "Update link" action re-publishes fresh quiz data. */
   onUpdate?: (link: PublishedLink) => void;
   /** True when the source quiz changed after this link was published. */
@@ -46,7 +46,7 @@ export function PublishedLinkRow({ link, origin, onDelete, onUpdate, stale }: Pr
           className="btn-danger"
           onClick={() => {
             if (confirm(`Delete link ${link.path}? Students with it will no longer be able to open the quiz.`)) {
-              onDelete(link.path);
+              onDelete(link.id);
             }
           }}
         >
