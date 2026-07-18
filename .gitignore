@@ -20,10 +20,13 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
 
-# prisma / sqlite (local dev database)
+# prisma / local libsql dev database (production uses Turso)
 /prisma/*.db
 /prisma/*.db-journal
+/prisma/*.db-wal
+/prisma/*.db-shm
 
 # typescript
 *.tsbuildinfo

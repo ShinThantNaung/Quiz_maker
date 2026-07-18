@@ -9,6 +9,7 @@
 
 import { NextResponse } from "next/server";
 import { isQuizShape, list, publish } from "@/database/publishedQuizzes";
+import { apiError } from "@/lib/apiError";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -26,12 +27,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Cannot publish a quiz with no questions." }, { status: 400 });
   }
 
-  const link = await publish(quiz);
-  return NextResponse.json(link, { status: 201 });
+  try {
+    const link = await publish(quiz);
+    return NextResponse.json(link, { status: 201 });
+  } catch (error) {
+    return apiError("POST /api/quizzes", error);
+  }
 }
 
 export async function GET(request: Request) {
   const sourceId = new URL(request.url).searchParams.get("sourceId") ?? undefined;
-  const links = await list(sourceId);
-  return NextResponse.json(links);
+  try {
+    const links = await list(sourceId);
+    return NextResponse.json(links);
+  } catch (error) {
+    return apiError("GET /api/quizzes", error);
+  }
 }
