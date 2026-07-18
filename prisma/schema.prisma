@@ -6,12 +6,18 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Local "native" engine + the target Vercel serverless runs on, so the
+  // client works both on the dev machine and after deploying to Vercel.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
+  // libSQL/SQLite. At runtime the client connects through the libSQL driver
+  // adapter (see src/database/client.ts) — to a local file in development and
+  // to Turso in production. This `url` is only used by the Prisma CLI
+  // (migrate / studio) locally; it defaults to the local dev file.
   provider = "sqlite"
-  // Self-contained file DB; no external services or env setup required.
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 /// One published quiz, addressable at /{subject}/{quizType}/{slug}.

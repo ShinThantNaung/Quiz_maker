@@ -8,7 +8,7 @@
 // Server-only: imported exclusively by route handlers and server components.
 // Do not import from a "use client" module.
 
-import type { Prisma, PublishedQuiz } from "@prisma/client";
+import { Prisma, type PublishedQuiz } from "@prisma/client";
 import { prisma } from "./client";
 import type { Question, Quiz, QuizSettings } from "@/types/quiz";
 import type { PublishedLink } from "@/types/published";
@@ -138,9 +138,15 @@ export async function getLinkById(id: string): Promise<PublishedLink | null> {
   return record ? toLink(record) : null;
 }
 
+/** True only for Prisma's "record to update/delete not found" (P2025). */
+function isRecordNotFound(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025";
+}
+
 /**
  * Update a published quiz in place, keeping its existing path so the shared URL
- * keeps working. Returns null when no such record exists.
+ * keeps working. Returns null when no such record exists; other errors (e.g. a
+ * database failure) propagate so the caller can surface them, not hide them.
  */
 export async function update(id: string, quiz: Quiz): Promise<PublishedLink | null> {
   try {
@@ -149,9 +155,9 @@ export async function update(id: string, quiz: Quiz): Promise<PublishedLink | nu
       data: contentData(quiz),
     });
     return toLink(record);
-  } catch {
-    // Prisma throws P2025 when the record to update is missing.
-    return null;
+  } catch (error) {
+    if (isRecordNotFound(error)) return null;
+    throw error;
   }
 }
 
@@ -160,8 +166,9 @@ export async function remove(id: string): Promise<boolean> {
   try {
     await prisma.publishedQuiz.delete({ where: { id } });
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if (isRecordNotFound(error)) return false;
+    throw error;
   }
 }
 

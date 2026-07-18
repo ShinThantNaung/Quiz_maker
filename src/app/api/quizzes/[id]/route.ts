@@ -9,16 +9,21 @@
 
 import { NextResponse } from "next/server";
 import { getLinkById, isQuizShape, remove, update } from "@/database/publishedQuizzes";
+import { apiError } from "@/lib/apiError";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params;
-  const link = await getLinkById(id);
-  if (!link) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  try {
+    const link = await getLinkById(id);
+    if (!link) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    return NextResponse.json(link);
+  } catch (error) {
+    return apiError(`GET /api/quizzes/${id}`, error);
   }
-  return NextResponse.json(link);
 }
 
 export async function PATCH(request: Request, { params }: Context) {
@@ -36,18 +41,26 @@ export async function PATCH(request: Request, { params }: Context) {
     return NextResponse.json({ error: "A valid quiz is required." }, { status: 400 });
   }
 
-  const link = await update(id, quiz);
-  if (!link) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  try {
+    const link = await update(id, quiz);
+    if (!link) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    return NextResponse.json(link);
+  } catch (error) {
+    return apiError(`PATCH /api/quizzes/${id}`, error);
   }
-  return NextResponse.json(link);
 }
 
 export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params;
-  const ok = await remove(id);
-  if (!ok) {
-    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  try {
+    const ok = await remove(id);
+    if (!ok) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    return apiError(`DELETE /api/quizzes/${id}`, error);
   }
-  return new NextResponse(null, { status: 204 });
 }
