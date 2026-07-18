@@ -133,3 +133,21 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   "true-false": "True / False",
   "fill-blank": "Fill in the Blank",
 };
+
+/** Slug used in a published link's {quizType} segment when questions differ. */
+export const MIXED_QUIZ_TYPE = "mixed";
+
+/**
+ * Derive the {quizType} URL segment for a quiz. When every question shares a
+ * type we use that type's slug (e.g. "mcq"); a mix of types becomes "mixed".
+ */
+export function deriveQuizType(quiz: Quiz): string {
+  const types = new Set(quiz.questions.map((q) => q.type));
+  if (types.size === 1) return quiz.questions[0].type;
+  return MIXED_QUIZ_TYPE;
+}
+
+export const QUIZ_TYPE_LABELS: Record<string, string> = {
+  ...QUESTION_TYPE_LABELS,
+  [MIXED_QUIZ_TYPE]: "Mixed",
+};

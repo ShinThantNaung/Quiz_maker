@@ -8,6 +8,7 @@ const TABS = [
   { slug: "settings", label: "Settings" },
   { slug: "preview", label: "Preview" },
   { slug: "generate", label: "Generate HTML" },
+  { slug: "link", label: "Create Link" },
 ];
 
 export function QuizNav({ quizId }: { quizId: string }) {
