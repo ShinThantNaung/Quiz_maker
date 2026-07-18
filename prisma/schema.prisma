@@ -1,0 +1,51 @@
+// Prisma schema for the Quiz Maker publishing backend.
+//
+// The database has a single job: store *published* quizzes so a shareable link
+// resolves to the same quiz on any device. Everything else — building, grading,
+// and rendering — stays client-side. Student answers are NEVER stored here.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  // Self-contained file DB; no external services or env setup required.
+  url      = "file:./dev.db"
+}
+
+/// One published quiz, addressable at /{subject}/{quizType}/{slug}.
+/// `settings` and `questions` hold the exact JSON the client renderer/grader
+/// needs, so publishing round-trips every question type and quiz mode.
+model PublishedQuiz {
+  id            String   @id @default(cuid())
+  /// Editor (localStorage) quiz id this link was generated from. Lets the
+  /// dashboard group links per quiz and detect edits made after publishing.
+  sourceId      String
+  /// Display title, and its slugified form used as the {title} URL segment.
+  title         String
+  slug          String
+  /// Slugified subject + quiz type — the {subject}/{quizType} URL segments.
+  subject       String
+  quizType      String
+  /// Un-slugified originals, kept for faithful rendering.
+  subjectLabel  String   @default("")
+  teacher       String   @default("")
+  instructions  String   @default("")
+  duration      String   @default("")
+  totalMarks    Int      @default(0)
+  questionCount Int      @default(0)
+  /// Grading / timer / practice-vs-exam settings (QuizSettings), as JSON.
+  settings      Json
+  /// All questions, preserving every type (mcq / true-false / fill-blank).
+  questions     Json
+  published     Boolean  @default(true)
+  /// The editor quiz's updatedAt (ms) captured at publish time; drives the
+  /// "quiz changed since publishing" hint in the dashboard.
+  sourceUpdatedAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // A link's path is its identity: one quiz per (subject, quizType, title).
+  @@unique([subject, quizType, slug])
+}

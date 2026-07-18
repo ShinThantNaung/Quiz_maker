@@ -16,7 +16,7 @@ import { QUIZ_TYPE_LABELS, deriveQuizType } from "@/utils/quiz";
 export default function CreateLinkPage() {
   const { id } = useParams<{ id: string }>();
   const { quiz, loaded, notFound } = useQuizEditor(id);
-  const { links, ready, publish, remove } = usePublished(id);
+  const { links, ready, error, publish, update, remove } = usePublished(id);
   const [origin, setOrigin] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -32,10 +32,19 @@ export default function CreateLinkPage() {
   const quizTypeLabel = QUIZ_TYPE_LABELS[deriveQuizType(quiz)] ?? deriveQuizType(quiz);
   const hasLinks = links.length > 0;
 
-  const generate = async (options?: { path?: string }) => {
+  const generate = async () => {
     setBusy(true);
     try {
-      await publish(quiz, options);
+      await publish(quiz);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const updateLink = async (link: PublishedLink) => {
+    setBusy(true);
+    try {
+      await update(link.id, quiz);
     } finally {
       setBusy(false);
     }
@@ -60,7 +69,7 @@ export default function CreateLinkPage() {
           <h1 className="text-xl font-bold text-slate-900">Create Shareable Link</h1>
           <p className="mt-1 text-sm text-slate-500">
             Publish this quiz to a link students can open directly — no file to download.
-            The quiz is stored, compressed, in this browser; the link resolves to it without a server.
+            The quiz is stored on the server, so the link works on any device you share it with.
           </p>
 
           <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -104,7 +113,9 @@ export default function CreateLinkPage() {
 
         <div className="card p-6">
           <h2 className="text-base font-semibold text-slate-800">Published Links</h2>
-          {!ready ? (
+          {error ? (
+            <p className="mt-2 text-sm text-red-600">{error}</p>
+          ) : !ready ? (
             <p className="mt-2 text-sm text-slate-400">Loading…</p>
           ) : !hasLinks ? (
             <p className="mt-2 text-sm text-slate-500">
@@ -118,7 +129,7 @@ export default function CreateLinkPage() {
                   link={link}
                   origin={origin}
                   onDelete={remove}
-                  onUpdate={(l) => generate({ path: l.path })}
+                  onUpdate={updateLink}
                   stale={isStale(link)}
                 />
               ))}
@@ -129,14 +140,15 @@ export default function CreateLinkPage() {
         <div className="card p-6">
           <h2 className="text-base font-semibold text-slate-800">How it works</h2>
           <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-slate-600">
-            <li>Generate a link — the quiz is serialized, compressed, and stored in this browser.</li>
+            <li>Generate a link — the quiz is stored on the server under a clean URL.</li>
             <li>Copy the link and send it to your students.</li>
-            <li>Students open the link and take the quiz right in the browser.</li>
-            <li>They submit and get instant marks — the answer key is never in the URL.</li>
+            <li>Students open the link on any device and take the quiz in the browser.</li>
+            <li>They submit and get instant marks — grading stays entirely client-side.</li>
           </ol>
           <p className="mt-3 text-xs text-slate-400">
-            Because there is no server, a link opens the quiz on devices that can reach this
-            browser&apos;s storage. To share beyond it, use Generate HTML.
+            Edited the quiz after sharing? Use <strong>Update Published Quiz</strong> to refresh the
+            link in place, or <strong>Generate New Link</strong> for a fresh URL. Student answers are
+            never sent to or stored on the server.
           </p>
         </div>
       </main>
